@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>建筑大师的认知之旅</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin: 20px 0;
+            color: #ffcc00;
+        }
+        
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .game-area {
+            margin: 30px 0;
+            min-height: 300px;
+        }
+        
+        .drag-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .building {
+            width: 200px;
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+            border: 3px solid #ffcc00;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .building-info {
+            background: rgba(255, 255, 255, 0.7);
+            color: black;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .drag-item {
+            background: rgba(255, 255, 255, 0.7);
+            color: black;
+            border: 2px dashed #ffcc00;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            cursor: grab;
+            transition: all 0.3s;
+            width: 200px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .drag-item:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.05);
+        }
+        
+        .drop-zone {
+            min-height: 100px;
+            border: 2px dashed #4CAF50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            transition: all 0.3s;
+            color: black;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        
+        .drop-zone.highlight {
+            background: rgba(76, 175, 80, 0.4);
+            border-color: #4CAF50;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 20px 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-retry {
+            background: linear-gradient(to right, #36D1DC, #5B86E5);
+        }
+        
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .option {
+            background: rgba(255, 255, 255, 0.7);
+            color: black;
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        
+        .option:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #ffcc00;
+        }
+        
+        .option.selected {
+            background: rgba(76, 175, 80, 0.5);
+            border-color: #4CAF50;
+        }
+        
+        .option.correct {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4CAF50;
+        }
+        
+        .option.incorrect {
+            background: rgba(244, 67, 54, 0.7);
+            border-color: #f44336;
+        }
+        
+        .question {
+            background: rgba(255, 255, 255, 0.7);
+            color: black;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            backdrop-filter: blur(5px);
+        }
+        
+        .question h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .sortable-list {
+            list-style-type: none;
+            margin: 30px 0;
+            min-height: 400px;
+        }
+        
+        .sortable-item {
+            background: rgba(255, 255, 255, 0.7);
+            color: black;
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: move;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            user-select: none;
+        }
+        
+        .sortable-item:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .sortable-item.dragging {
+            opacity: 0.7;
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .sortable-item.drag-over {
+            border: 2px dashed #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+        
+        .level-indicator {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        .level {
+            width: 23%;
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            background: #333;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .level.active {
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            transform: scale(1.05);
+        }
+        
+        .level.completed {
+            background: #4CAF50;
+        }
+        
+        /* 第四关样式 */
+        .writing-area {
+            background: rgba(255, 255, 255, 0.7);
+            color: black;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+            backdrop-filter: blur(5px);
+        }
+        
+        .writing-prompt {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .writing-prompt h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .writing-prompt ul {
+            text-align: left;
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .writing-prompt li {
+            margin-bottom: 8px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 180px;
+            padding: 15px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            font-size: 1rem;
+            line-height: 1.5;
+            resize: vertical;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            color: #333;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #ff9966;
+            box-shadow: 0 0 5px rgba(255, 153, 102, 0.5);
+        }
+        
+        .word-count {
+            text-align: right;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .title-highlight {
+            background: rgba(173, 216, 230, 0.7);
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(135, 206, 235, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .title-highlight h2 {
+            color: #2c3e50;
+            margin: 10px 0;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.7);
+        }
+        
+        .title-highlight p {
+            color: #34495e;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        /* 大门动画效果 */
+        .door-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            display: none;
+            perspective: 1000px;
+            background: rgba(0, 0, 0, 0.95);
+        }
+        
+        .door-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 800px;
+            z-index: 101;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .door {
+            position: absolute;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to bottom, #8B4513, #A0522D, #8B4513);
+            transition: transform 2.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 15px solid #5D4037;
+        }
+        
+        .door-left {
+            left: 0;
+            transform-origin: left center;
+            border-right: 8px solid #5D4037;
+        }
+        
+        .door-right {
+            right: 0;
+            transform-origin: right center;
+            border-left: 8px solid #5D4037;
+        }
+        
+        .door-knob {
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, #FFD700, #B8860B);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+        }
+        
+        .door-left .door-knob {
+            right: 30px;
+        }
+        
+        .door-right .door-knob {
+            left: 30px;
+        }
+        
+        .door-open .door-left {
+            transform: rotateY(-105deg);
+        }
+        
+        .door-open .door-right {
+            transform: rotateY(105deg);
+        }
+        
+        .light {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,210,0.9) 0%, rgba(255,255,150,0.7) 30%, rgba(255,255,100,0.4) 60%, rgba(255,255,50,0) 90%);
+            opacity: 0;
+            transition: opacity 2s;
+            z-index: 99;
+        }
+        
+        .door-open .light {
+            opacity: 1;
+        }
+        
+        .door-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.8);
+            z-index: 102;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        
+        .door-open .door-text {
+            opacity: 1;
+        }
+        
+        /* 礼花效果 - 传统礼炮效果 */
+        .fireworks-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 200;
+            pointer-events: none;
+            display: none;
+            overflow: hidden;
+        }
+        
+        .firework {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: firework-launch 1.5s ease-out forwards;
+            z-index: 201;
+        }
+        
+        @keyframes firework-launch {
+            0% {
+                transform: translateY(100vh) scale(0.5);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(var(--launch-height)) scale(1);
+                opacity: 0;
+            }
+        }
+        
+        .firework-burst {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            animation: firework-burst 1.5s ease-out forwards;
+            z-index: 202;
+        }
+        
+        @keyframes firework-burst {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+                box-shadow: 0 0 0 0 var(--burst-color);
+            }
+            20% {
+                opacity: 1;
+            }
+            100% {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+                box-shadow: 0 0 0 100px transparent;
+                margin: -100px 0 0 -100px;
+            }
+        }
+        
+        .firework-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            animation: particle-fall 2s ease-out forwards;
+            z-index: 203;
+        }
+        
+        @keyframes particle-fall {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.7);
+            color: black;
+            backdrop-filter: blur(5px);
+        }
+        
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.5);
+            border: 2px solid #4CAF50;
+            color: #2E7D32;
+        }
+        
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.5);
+            border: 2px solid #f44336;
+            color: #C62828;
+        }
+        
+        .completion-message {
+            font-size: 1.5rem;
+            margin: 30px 0;
+            color: #ffcc00;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        .certificate {
+            background: url('https://www.transparenttextures.com/patterns/old-map.png'), linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            padding: 40px;
+            border: 15px solid #ffcc00;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin: 30px 0;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .certificate h2 {
+            color: #8B4513;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .certificate p {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+        
+        .signature {
+            margin-top: 40px;
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.8rem;
+            color: #8B4513;
+        }
+        
+        /* 页面背景 */
+        #startPage {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
+                        url('https://img.pconline.com.cn/images/upload/upc/tx/photoblog/1607/06/c3/23815449_1467774515915.jpg') no-repeat center center;
+            background-size: cover;
+        }
+        
+        #level1Page {
+            background: url('https://img.pconline.com.cn/images/upload/upc/tx/photoblog/1607/06/c3/23815449_1467774515915.jpg') no-repeat center center;
+            background-size: cover;
+        }
+        
+        #level1Page .container {
+            background: rgba(0, 0, 0, 0.75);
+        }
+        
+        #level2Page {
+            background: url('https://www.thechinajourney.com/wp-content/uploads/2025/05/The-Forbidden-City-Beijing-Stunning-aerial-view-of-the-Forbidden-City-Palace-Museum-with-its-iconic-red-and-golden-rooftops-under-a-bright-blue-sky.webp') no-repeat center center;
+            background-size: cover;
+        }
+        
+        #level2Page .container {
+            background: rgba(0, 0, 0, 0.75);
+        }
+        
+        #level3Page {
+            background: url('https://img.pconline.com.cn/images/upload/upc/tx/photoblog/1607/06/c3/23815449_1467774515915.jpg') no-repeat center center;
+            background-size: cover;
+        }
+        
+        #level3Page .container {
+            background: rgba(0, 0, 0, 0.75);
+        }
+        
+        #level4Page {
+            background: url('https://file1.shop265.com/tk/2019/24a79b6749f7852f00f8e90d080db9eb.jpg') no-repeat center center;
+            background-size: cover;
+        }
+        
+        #level4Page .container {
+            background: rgba(0, 0, 0, 0.75);
+        }
+        
+        .welcome-text {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+        }
+        
+        .game-title {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, #ff9966, #ff5e62, #ff9966);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255, 153, 102, 0.5);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- 大门动画容器 -->
+    <div class="door-container" id="doorContainer">
+        <div class="door-frame">
+            <div class="door door-left">
+                <div class="door-knob"></div>
+            </div>
+            <div class="door door-right">
+                <div class="door-knob"></div>
+            </div>
+        </div>
+        <div class="light"></div>
+        <div class="door-text" id="doorText">通往下一关</div>
+    </div>
+    
+    <!-- 礼花容器 -->
+    <div class="fireworks-container" id="fireworksContainer"></div>
+    
+    <!-- 开始页面 -->
+    <div class="container" id="startPage">
+        <h1 class="game-title">建筑大师的认知之旅</h1>
+        <p class="welcome-text">欢迎，未来的建筑大师！在这个旅程中，你将通过四个关卡的考验，深入了解现代中国建筑的设计理念与文化内涵。</p>
+        <p class="welcome-text">每一关都需要你运用在课文《变化中的中国建筑》中学到的知识，通过匹配、选择、排序和描述来证明你的理解。</p>
+        <p class="welcome-text">准备好了吗？让我们开始这段精彩的建筑认知之旅！</p>
+        <button class="btn" id="startBtn">开始旅程</button>
+    </div>
+    
+    <!-- 关卡选择/进度指示器 -->
+    <div class="level-indicator" id="levelIndicator" style="display: none;">
+        <div class="level active" id="level1">第一关：理念的基石</div>
+        <div class="level" id="level2">第二关：传统的密码</div>
+        <div class="level" id="level3">第三关：时代的回响</div>
+        <div class="level" id="level4">第四关：江南印象</div>
+    </div>
+    
+    <!-- 第一关：理念的基石 -->
+    <div class="container hidden" id="level1Page">
+        <h2>第一关：理念的基石</h2>
+        <p>将右侧的设计师和理念碎片，拖拽到对应的建筑图片下方。</p>
+        
+        <div class="game-area">
+            <div class="drag-container">
+                <div class="building" style="background-image: url('https://img.pconline.com.cn/images/upload/upc/tx/photoblog/1607/06/c3/23815449_1467774515915.jpg')">
+                    <div class="building-info">国家大剧院</div>
+                </div>
+                <div class="building" style="background-image: url('https://img.pconline.com.cn/images/upload/upc/tx/photoblog/1210/08/c14/14318758_14318758_1349711276045.jpg')">
+                    <div class="building-info">国家体育场"鸟巢"</div>
+                </div>
+                <div class="building" style="background-image: url('https://e0.ifengimg.com/03/2019/0517/EEE9AAB0761CB75294D5CDBDB7AF6D4DF5C150A6_size58_w680_h451.jpeg')">
+                    <div class="building-info">卢浮宫金字塔</div>
+                </div>
+            </div>
+            
+            <div class="drag-container" id="dragItemsContainer">
+                <!-- 拖拽项将通过JS随机排序 -->
+            </div>
+            
+            <div class="drop-zone" id="dropZone1" data-building="building1">
+                <p>国家大剧院匹配区</p>
+            </div>
+            <div class="drop-zone" id="dropZone2" data-building="building2">
+                <p>"鸟巢"匹配区</p>
+            </div>
+            <div class="drop-zone" id="dropZone3" data-building="building3">
+                <p>卢浮宫金字塔匹配区</p>
+            </div>
+        </div>
+        
+        <div class="feedback" id="level1Feedback"></div>
+        <button class="btn" id="checkLevel1" disabled>检查答案</button>
+        <button class="btn btn-retry hidden" id="retryLevel1">再次作答</button>
+    </div>
+    
+    <!-- 第二关：传统的密码 -->
+    <div class="container hidden" id="level2Page">
+        <h2>第二关：传统的密码</h2>
+        <p>请回答以下问题，测试你对中国传统建筑理念的理解。</p>
+        
+        <div class="game-area">
+            <div class="question">
+                <h3>问题1：以下哪些描述体现了"天人合一"的理念？</h3>
+                <div class="options-container">
+                    <div class="option" data-correct="true">天坛、地坛的命名方式</div>
+                    <div class="option" data-correct="true">南京明孝陵的建筑布局与北斗七星形状呼应</div>
+                    <div class="option" data-correct="false">故宫太和殿使用了金色的琉璃瓦</div>
+                    <div class="option" data-correct="true">一个山村依山傍水而建，与自然环境融为一体</div>
+                </div>
+            </div>
+            
+            <div class="question">
+                <h3>问题2：辨别中国传统建筑物级别的一个最简单办法是什么？</h3>
+                <div class="options-container">
+                    <div class="option" data-correct="false">看建筑的占地面积</div>
+                    <div class="option" data-correct="true">数一数建筑物戗脊上的小动物——走兽的数目</div>
+                    <div class="option" data-correct="false">看建筑使用的材料</div>
+                    <div class="option" data-correct="false">看建筑的屋顶颜色</div>
+                </div>
+            </div>
+            
+            <div class="question">
+                <h3>问题3：故宫太和殿有几个走兽？这说明了什么？</h3>
+                <div class="options-container">
+                    <div class="option" data-correct="true">10个，是皇家举行大典仪式的地方，级别最高</div>
+                    <div class="option" data-correct="false">7个，是皇帝日常办公的地方</div>
+                    <div class="option" data-correct="false">5个，是皇后居住的地方</div>
+                    <div class="option" data-correct="false">3个，是普通官员办公的地方</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="feedback" id="level2Feedback"></div>
+        <button class="btn" id="checkLevel2">检查答案</button>
+        <button class="btn btn-retry hidden" id="retryLevel2">再次作答</button>
+        <button class="btn btn-retry" id="skipLevel2">重新尝试</button>
+    </div>
+    
+    <!-- 第三关：时代的回响 -->
+    <div class="container hidden" id="level3Page">
+        <h2>第三关：时代的回响</h2>
+        <p>请问为什么"蛋壳"大剧院和"鸟巢"体育场会引起巨大的争议，请根据课文内容，按照重要程度拖动下列选项排序。</p>
+        
+        <div class="game-area">
+            <ul class="sortable-list" id="sortableList">
+                <!-- 选项将在JS中随机排序 -->
+            </ul>
+        </div>
+        
+        <div class="feedback" id="level3Feedback"></div>
+        <button class="btn" id="checkLevel3">检查答案</button>
+    </div>
+    
+    <!-- 第四关：江南印象 -->
+    <div class="container hidden" id="level4Page">
+        <div class="title-highlight">
+            <h2>第四关：江南印象</h2>
+            <p>请用3-5句话描述你心中典型的苏州建筑</p>
+        </div>
+        
+        <div class="game-area">
+            <div class="writing-area">
+                <div class="writing-prompt">
+                    <h3>引导提示：</h3>
+                    <ul>
+                        <li>可以参考课文当中体现的传统建筑或现代建筑的理念</li>
+                        <li>请结合苏州当地的文化特色进行描写</li>
+                    </ul>
+                </div>
+                
+                <textarea id="suzhouDescription" placeholder="请在这里输入你的描述..."></textarea>
+                <div class="word-count" id="wordCount">0 字</div>
+            </div>
+        </div>
+        
+        <div class="feedback" id="level4Feedback"></div>
+        <button class="btn" id="submitLevel4">提交描述</button>
+    </div>
+    
+    <!-- 完成页面 -->
+    <div class="container hidden" id="completionPage">
+        <h1>恭喜你完成所有关卡！</h1>
+        <div class="completion-message">你已成功通过建筑大师的认知之旅！</div>
+        
+        <div class="certificate">
+            <h2>建筑大师认证证书</h2>
+            <p>兹证明</p>
+            <p style="font-size: 2rem; font-weight: bold; margin: 20px 0;">未来的建筑大师</p>
+            <p>已成功完成《建筑大师的认知之旅》所有关卡</p>
+            <p>展现出对现代中国建筑理念与文化的深刻理解</p>
+            <p>特发此证，以资鼓励</p>
+            <div class="signature">建筑认知学院</div>
+        </div>
+        
+        <button class="btn" id="restartBtn">重新开始旅程</button>
+    </div>
+
+    <script>
+        // 游戏状态管理
+        const gameState = {
+            currentLevel: 0,
+            levelsCompleted: 0,
+            level1Completed: false,
+            level2Completed: false,
+            level3Completed: false,
+            level4Completed: false
+        };
+
+        // DOM 元素
+        const startPage = document.getElementById('startPage');
+        const levelIndicator = document.getElementById('levelIndicator');
+        const level1Page = document.getElementById('level1Page');
+        const level2Page = document.getElementById('level2Page');
+        const level3Page = document.getElementById('level3Page');
+        const level4Page = document.getElementById('level4Page');
+        const completionPage = document.getElementById('completionPage');
+        const startBtn = document.getElementById('startBtn');
+        const checkLevel1Btn = document.getElementById('checkLevel1');
+        const checkLevel2Btn = document.getElementById('checkLevel2');
+        const checkLevel3Btn = document.getElementById('checkLevel3');
+        const submitLevel4Btn = document.getElementById('submitLevel4');
+        const retryLevel1Btn = document.getElementById('retryLevel1');
+        const retryLevel2Btn = document.getElementById('retryLevel2');
+        const skipLevel2Btn = document.getElementById('skipLevel2');
+        const restartBtn = document.getElementById('restartBtn');
+        const doorContainer = document.getElementById('doorContainer');
+        const doorText = document.getElementById('doorText');
+        const fireworksContainer = document.getElementById('fireworksContainer');
+        const sortableList = document.getElementById('sortableList');
+        const dragItemsContainer = document.getElementById('dragItemsContainer');
+        const level3Feedback = document.getElementById('level3Feedback');
+        const level4Feedback = document.getElementById('level4Feedback');
+        const suzhouDescription = document.getElementById('suzhouDescription');
+        const wordCount = document.getElementById('wordCount');
+
+        // 第一关拖拽项数据
+        const level1DragItems = [
+            { text: "保罗·安德鲁", target: "building1" },
+            { text: '"蛋壳"、"梦想之地"', target: "building1" },
+            { text: '"外壳、生命、开放"', target: "building1" },
+            { text: "赫尔佐格", target: "building2" },
+            { text: '"摇篮"、"寄托希望"', target: "building2" },
+            { text: "贝聿铭", target: "building3" },
+            { text: '"跨越时空"、"融合古今"', target: "building3" }
+        ];
+
+        // 第三关选项数据
+        const level3Options = [
+            { text: "中西方建筑理念存在根本差异（西方重'人类''梦想'，中国重'天人合一''等级'）", value: 4 },
+            { text: "建筑风格与北京古都风貌不协调", value: 3 },
+            { text: "建造费用过高", value: 1 },
+            { text: "安全令人担忧", value: 2 },
+            { text: "它们像巴黎卢浮宫金字塔一样，是超前的设计，需要时间被接受", value: 5 }
+        ];
+
+        // 正确的顺序
+        const correctOrder = [4, 3, 1, 2, 5];
+
+        // 初始化第一关
+        function initLevel1() {
+            // 随机排序拖拽项
+            const shuffledItems = [...level1DragItems].sort(() => Math.random() - 0.5);
+            
+            // 清空容器
+            dragItemsContainer.innerHTML = '';
+            
+            // 添加拖拽项到容器
+            shuffledItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'drag-item';
+                div.textContent = item.text;
+                div.dataset.target = item.target;
+                div.draggable = true;
+                dragItemsContainer.appendChild(div);
+            });
+            
+            // 重新初始化拖拽功能
+            initLevel1DragAndDrop();
+        }
+
+        // 初始化第一关拖拽功能
+        function initLevel1DragAndDrop() {
+            const dragItems = document.querySelectorAll('#dragItemsContainer .drag-item');
+            const dropZones = document.querySelectorAll('.drop-zone');
+            let draggedItem = null;
+
+            dragItems.forEach(item => {
+                item.addEventListener('dragstart', function() {
+                    draggedItem = this;
+                    setTimeout(() => this.style.display = 'none', 0);
+                });
+
+                item.addEventListener('dragend', function() {
+                    setTimeout(() => {
+                        this.style.display = 'block';
+                        draggedItem = null;
+                    }, 0);
+                });
+            });
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('highlight');
+                });
+
+                zone.addEventListener('dragleave', function() {
+                    this.classList.remove('highlight');
+                });
+
+                zone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('highlight');
+                    
+                    if (draggedItem && draggedItem.dataset.target === this.dataset.building) {
+                        this.appendChild(draggedItem);
+                        checkLevel1Btn.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // 初始化第三关
+        function initLevel3() {
+            // 随机排序选项
+            const shuffledOptions = [...level3Options].sort(() => Math.random() - 0.5);
+            
+            // 清空列表
+            sortableList.innerHTML = '';
+            
+            // 添加选项到列表
+            shuffledOptions.forEach(option => {
+                const li = document.createElement('li');
+                li.className = 'sortable-item';
+                li.textContent = option.text;
+                li.dataset.value = option.value;
+                li.draggable = true;
+                sortableList.appendChild(li);
+            });
+            
+            // 初始化拖拽功能
+            initDragAndDrop();
+        }
+
+        // 初始化拖拽功能
+        function initDragAndDrop() {
+            let draggedItem = null;
+            
+            // 为每个可拖拽项添加事件监听器
+            document.querySelectorAll('.sortable-item').forEach(item => {
+                item.addEventListener('dragstart', function(e) {
+                    draggedItem = this;
+                    setTimeout(() => {
+                        this.classList.add('dragging');
+                    }, 0);
+                });
+                
+                item.addEventListener('dragend', function() {
+                    this.classList.remove('dragging');
+                    draggedItem = null;
+                    document.querySelectorAll('.sortable-item').forEach(item => {
+                        item.classList.remove('drag-over');
+                    });
+                });
+                
+                item.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    if (this !== draggedItem) {
+                        this.classList.add('drag-over');
+                    }
+                });
+                
+                item.addEventListener('dragleave', function() {
+                    this.classList.remove('drag-over');
+                });
+                
+                item.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    
+                    if (this !== draggedItem) {
+                        const allItems = Array.from(sortableList.querySelectorAll('.sortable-item'));
+                        const draggedIndex = allItems.indexOf(draggedItem);
+                        const targetIndex = allItems.indexOf(this);
+                        
+                        if (draggedIndex < targetIndex) {
+                            sortableList.insertBefore(draggedItem, this.nextSibling);
+                        } else {
+                            sortableList.insertBefore(draggedItem, this);
+                        }
+                    }
+                });
+            });
+        }
+
+        // 第四关字数统计和句子检查
+        suzhouDescription.addEventListener('input', function() {
+            const text = this.value;
+            const count = text.length;
+            
+            wordCount.textContent = `${count} 字`;
+        });
+
+        // 开始游戏
+        startBtn.addEventListener('click', () => {
+            startPage.classList.add('hidden');
+            levelIndicator.style.display = 'flex';
+            level1Page.classList.remove('hidden');
+            gameState.currentLevel = 1;
+            // 初始化第一关
+            initLevel1();
+        });
+
+        // 检查第一关答案
+        checkLevel1Btn.addEventListener('click', () => {
+            const dropZone1Items = document.querySelectorAll('#dropZone1 .drag-item');
+            const dropZone2Items = document.querySelectorAll('#dropZone2 .drag-item');
+            const dropZone3Items = document.querySelectorAll('#dropZone3 .drag-item');
+            
+            // 简单验证：每个区域应该有正确数量的项目
+            if (dropZone1Items.length === 3 && dropZone2Items.length === 2 && dropZone3Items.length === 2) {
+                level1Feedback.textContent = "恭喜你！你已经掌握了这些伟大建筑的设计灵魂。";
+                level1Feedback.className = "feedback correct";
+                gameState.level1Completed = true;
+                checkLevel1Btn.classList.add('hidden');
+                retryLevel1Btn.classList.add('hidden');
+                setTimeout(() => showDoorAnimation(2), 1500);
+            } else {
+                level1Feedback.textContent = "匹配不完全正确，请再试一次。";
+                level1Feedback.className = "feedback incorrect";
+                retryLevel1Btn.classList.remove('hidden');
+            }
+        });
+
+        // 第一关再次作答
+        retryLevel1Btn.addEventListener('click', () => {
+            const allDragItems = document.querySelectorAll('.drag-item');
+            const originalContainer = document.querySelector('.drag-container:last-child');
+            allDragItems.forEach(item => {
+                originalContainer.appendChild(item);
+            });
+            level1Feedback.textContent = "";
+            level1Feedback.className = "feedback";
+            checkLevel1Btn.disabled = true;
+            retryLevel1Btn.classList.add('hidden');
+        });
+
+        // 第二关逻辑
+        const level2Options = document.querySelectorAll('#level2Page .option');
+        const level2Feedback = document.getElementById('level2Feedback');
+        
+        // 重置第二关选项状态
+        level2Options.forEach(option => {
+            option.addEventListener('click', function() {
+                const questionContainer = this.closest('.question');
+                const questionOptions = questionContainer.querySelectorAll('.option');
+                
+                // 如果是多选题（问题1）
+                if (questionContainer.querySelectorAll('.option').length === 4 && questionContainer.querySelector('h3').textContent.includes('问题1')) {
+                    this.classList.toggle('selected');
+                } 
+                // 如果是单选题（问题2和3）
+                else {
+                    questionOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                }
+            });
+        });
+
+        // 检查第二关答案
+        checkLevel2Btn.addEventListener('click', () => {
+            // 获取问题1的答案
+            const q1Options = document.querySelectorAll('.question:nth-child(1) .option');
+            const q1Selected = Array.from(q1Options).filter(opt => opt.classList.contains('selected'));
+            const q1Correct = q1Selected.length === 3 && 
+                q1Selected.every(opt => opt.dataset.correct === 'true');
+            
+            // 获取问题2的答案
+            const q2Options = document.querySelectorAll('.question:nth-child(2) .option');
+            const q2Selected = Array.from(q2Options).find(opt => opt.classList.contains('selected'));
+            const q2Correct = q2Selected && q2Selected.dataset.correct === 'true';
+            
+            // 获取问题3的答案
+            const q3Options = document.querySelectorAll('.question:nth-child(3) .option');
+            const q3Selected = Array.from(q3Options).find(opt => opt.classList.contains('selected'));
+            const q3Correct = q3Selected && q3Selected.dataset.correct === 'true';
+            
+            const allCorrect = q1Correct && q2Correct && q3Correct;
+            
+            if (allCorrect) {
+                level2Feedback.textContent = "了不起！你已经破解了中国传统建筑的密码。";
+                level2Feedback.className = "feedback correct";
+                gameState.level2Completed = true;
+                checkLevel2Btn.classList.add('hidden');
+                retryLevel2Btn.classList.add('hidden');
+                skipLevel2Btn.classList.add('hidden');
+                setTimeout(() => showDoorAnimation(3), 1500);
+            } else {
+                level2Feedback.textContent = "部分答案不正确，请再检查一下。";
+                level2Feedback.className = "feedback incorrect";
+                retryLevel2Btn.classList.remove('hidden');
+                
+                // 显示正确答案
+                level2Options.forEach(option => {
+                    if (option.dataset.correct === 'true') {
+                        option.classList.add('correct');
+                    } else if (option.classList.contains('selected')) {
+                        option.classList.add('incorrect');
+                    }
+                });
+            }
+        });
+
+        // 第二关再次作答
+        retryLevel2Btn.addEventListener('click', () => {
+            level2Options.forEach(option => {
+                option.classList.remove('selected', 'correct', 'incorrect');
+            });
+            level2Feedback.textContent = "";
+            level2Feedback.className = "feedback";
+            retryLevel2Btn.classList.add('hidden');
+        });
+
+        // 第二关重新尝试
+        skipLevel2Btn.addEventListener('click', () => {
+            level2Options.forEach(option => {
+                option.classList.remove('selected', 'correct', 'incorrect');
+            });
+            level2Feedback.textContent = "";
+            level2Feedback.className = "feedback";
+            retryLevel2Btn.classList.add('hidden');
+        });
+
+        // 检查第三关答案
+        checkLevel3Btn.addEventListener('click', () => {
+            const currentOrder = Array.from(sortableList.querySelectorAll('.sortable-item')).map(item => parseInt(item.dataset.value));
+            
+            // 检查顺序是否正确
+            const isCorrect = JSON.stringify(currentOrder) === JSON.stringify(correctOrder);
+            
+            if (isCorrect) {
+                level3Feedback.textContent = "分析得非常透彻！你已经理解了这些建筑争议的核心。";
+                level3Feedback.className = "feedback correct";
+                gameState.level3Completed = true;
+                setTimeout(() => showDoorAnimation(4), 1500);
+            } else {
+                level3Feedback.textContent = "排序不完全正确，请再思考一下这些原因的逻辑关系。";
+                level3Feedback.className = "feedback incorrect";
+            }
+        });
+
+        // 提交第四关答案
+        submitLevel4Btn.addEventListener('click', () => {
+            const description = suzhouDescription.value.trim();
+            const wordCount = description.length;
+            const sentences = description.split(/[。！？.!?]/).filter(s => s.trim().length > 0).length;
+            
+            if (wordCount < 30 || sentences < 3) {
+                level4Feedback.textContent = "请再多描述一点。";
+                level4Feedback.className = "feedback incorrect";
+                return;
+            }
+            
+            level4Feedback.textContent = "描述提交成功！你对苏州建筑的理解很有见地。";
+            level4Feedback.className = "feedback correct";
+            gameState.level4Completed = true;
+            submitLevel4Btn.disabled = true;
+            setTimeout(showCompletion, 1500);
+        });
+
+        // 大门动画
+        function showDoorAnimation(nextLevel) {
+            doorContainer.style.display = 'block';
+            doorText.textContent = nextLevel === 2 ? "通往第二关" : 
+                                 nextLevel === 3 ? "通往第三关" : 
+                                 "通往第四关";
+            
+            setTimeout(() => {
+                doorContainer.classList.add('door-open');
+            }, 100);
+            
+            setTimeout(() => {
+                doorContainer.style.display = 'none';
+                doorContainer.classList.remove('door-open');
+                
+                // 切换到下一关
+                if (nextLevel === 2) {
+                    level1Page.classList.add('hidden');
+                    level2Page.classList.remove('hidden');
+                    document.getElementById('level1').classList.remove('active');
+                    document.getElementById('level1').classList.add('completed');
+                    document.getElementById('level2').classList.add('active');
+                } else if (nextLevel === 3) {
+                    level2Page.classList.add('hidden');
+                    level3Page.classList.remove('hidden');
+                    document.getElementById('level2').classList.remove('active');
+                    document.getElementById('level2').classList.add('completed');
+                    document.getElementById('level3').classList.add('active');
+                    // 初始化第三关
+                    initLevel3();
+                } else if (nextLevel === 4) {
+                    level3Page.classList.add('hidden');
+                    level4Page.classList.remove('hidden');
+                    document.getElementById('level3').classList.remove('active');
+                    document.getElementById('level3').classList.add('completed');
+                    document.getElementById('level4').classList.add('active');
+                }
+            }, 3000);
+        }
+
+        // 完成游戏
+        function showCompletion() {
+            level4Page.classList.add('hidden');
+            completionPage.classList.remove('hidden');
+            document.getElementById('level4').classList.remove('active');
+            document.getElementById('level4').classList.add('completed');
+            
+            // 显示礼花效果
+            showFireworks();
+        }
+
+        // 礼花效果 - 传统礼炮效果
+        function showFireworks() {
+            fireworksContainer.style.display = 'block';
+            
+            // 持续生成礼花15秒
+            const fireworksInterval = setInterval(() => {
+                createTraditionalFirework();
+            }, 300);
+            
+            setTimeout(() => {
+                clearInterval(fireworksInterval);
+                setTimeout(() => {
+                    fireworksContainer.style.display = 'none';
+                    fireworksContainer.innerHTML = '';
+                }, 3000);
+            }, 15000);
+        }
+
+        function createTraditionalFirework() {
+            // 随机位置
+            const left = 10 + Math.random() * 80;
+            const launchHeight = 20 + Math.random() * 50;
+            
+            // 随机颜色
+            const colors = [
+                '#ff0000', '#00ff00', '#0000ff', 
+                '#ffff00', '#ff00ff', '#00ffff',
+                '#ff9900', '#ff66cc', '#66ff66'
+            ];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            // 创建上升的火花
+            const firework = document.createElement('div');
+            firework.classList.add('firework');
+            firework.style.left = `${left}%`;
+            firework.style.bottom = '0';
+            firework.style.backgroundColor = color;
+            firework.style.setProperty('--launch-height', `-${launchHeight}vh`);
+            firework.style.boxShadow = `0 0 10px ${color}`;
+            
+            fireworksContainer.appendChild(firework);
+            
+            // 火花到达顶点后爆炸
+            setTimeout(() => {
+                // 移除上升的火花
+                firework.remove();
+                
+                // 创建爆炸效果
+                createBurst(left, 100 - launchHeight, color);
+                
+            }, 1500);
+        }
+
+        function createBurst(left, top, color) {
+            // 创建爆炸中心
+            const burst = document.createElement('div');
+            burst.classList.add('firework-burst');
+            burst.style.left = `${left}%`;
+            burst.style.top = `${top}%`;
+            burst.style.setProperty('--burst-color', color);
+            burst.style.backgroundColor = color;
+            
+            fireworksContainer.appendChild(burst);
+            
+            // 创建爆炸粒子
+            const particleCount = 40 + Math.floor(Math.random() * 30);
+            for (let i = 0; i < particleCount; i++) {
+                createParticle(left, top, color);
+            }
+            
+            // 移除爆炸效果
+            setTimeout(() => {
+                burst.remove();
+            }, 1500);
+        }
+
+        function createParticle(left, top, color) {
+            const particle = document.createElement('div');
+            particle.classList.add('firework-particle');
+            particle.style.left = `${left}%`;
+            particle.style.top = `${top}%`;
+            particle.style.backgroundColor = color;
+            particle.style.boxShadow = `0 0 6px ${color}`;
+            
+            // 随机方向
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 30 + Math.random() * 120;
+            const tx = Math.cos(angle) * distance;
+            const ty = Math.sin(angle) * distance;
+            
+            particle.style.setProperty('--tx', `${tx}px`);
+            particle.style.setProperty('--ty', `${ty}px`);
+            
+            fireworksContainer.appendChild(particle);
+            
+            // 移除粒子
+            setTimeout(() => {
+                particle.remove();
+            }, 2000);
+        }
+
+        // 重新开始游戏
+        restartBtn.addEventListener('click', () => {
+            completionPage.classList.add('hidden');
+            startPage.classList.remove('hidden');
+            levelIndicator.style.display = 'none';
+            
+            // 重置游戏状态
+            gameState.currentLevel = 0;
+            gameState.level1Completed = false;
+            gameState.level2Completed = false;
+            gameState.level3Completed = false;
+            gameState.level4Completed = false;
+            
+            // 重置关卡指示器
+            document.getElementById('level1').classList.remove('completed');
+            document.getElementById('level2').classList.remove('completed');
+            document.getElementById('level3').classList.remove('completed');
+            document.getElementById('level4').classList.remove('completed');
+            document.getElementById('level1').classList.add('active');
+            
+            // 重置第一关
+            checkLevel1Btn.disabled = true;
+            checkLevel1Btn.classList.remove('hidden');
+            retryLevel1Btn.classList.add('hidden');
+            level1Feedback.textContent = "";
+            level1Feedback.className = "feedback";
+            
+            // 重置第二关
+            level2Options.forEach(option => {
+                option.classList.remove('selected', 'correct', 'incorrect');
+            });
+            checkLevel2Btn.classList.remove('hidden');
+            retryLevel2Btn.classList.add('hidden');
+            skipLevel2Btn.classList.remove('hidden');
+            level2Feedback.textContent = "";
+            level2Feedback.className = "feedback";
+            
+            // 重置第三关
+            level3Feedback.textContent = "";
+            level3Feedback.className = "feedback";
+            
+            // 重置第四关
+            suzhouDescription.value = "";
+            wordCount.textContent = "0 字";
+            wordCount.style.color = '#666';
+            level4Feedback.textContent = "";
+            level4Feedback.className = "feedback";
+            submitLevel4Btn.disabled = false;
+        });
+    </script>
+</body>
+</html>
